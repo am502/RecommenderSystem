@@ -53,11 +53,17 @@ public class InsertData {
             }
         }
 
-        userDao.addUsers(users);
+//        userDao.addUsers(users);
 
         List<Article> articles = new ArrayList<>();
 
+        int count = 0;
         for (String postId : postIds) {
+            if (count == 100) {
+                break;
+            }
+            count++;
+            System.out.println(count);
             try {
                 Document doc = Jsoup.connect(URL + postId + "/").get();
 
@@ -67,7 +73,9 @@ public class InsertData {
                         .ownerId(random.nextInt(userId) + 1)
                         .build();
 
-                articles.add(article);
+                if (!article.getContent().isEmpty()) {
+                    articles.add(article);
+                }
             } catch (HttpStatusException ignored) {
             } catch (IOException e) {
                 e.printStackTrace();

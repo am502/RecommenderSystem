@@ -12,7 +12,7 @@ import java.util.List;
 
 @Repository
 public class ArticleDaoImpl implements ArticleDao {
-    private static final String INSERT_ARTICLE = "INSERT INTO article (title, content, owner_id) " +
+    private static final String INSERT_ARTICLE = "INSERT INTO articles (title, content, owner_id) " +
             "VALUES (:title, :content, :ownerId);";
 
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
