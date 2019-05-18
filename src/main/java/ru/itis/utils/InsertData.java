@@ -32,7 +32,7 @@ public class InsertData {
         }
         sc.nextLine();
 
-        Set<String> postIds = new HashSet<>();
+        Set<String> posts = new HashSet<>();
         List<User> users = new ArrayList<>();
 
         int userId = 0;
@@ -49,23 +49,23 @@ public class InsertData {
             users.add(user);
 
             for (String postId : line[1].split(" ")) {
-                postIds.add(postId);
+                posts.add(postId);
             }
         }
 
-//        userDao.addUsers(users);
+        userDao.addUsers(users);
+
+        List<String> postIds = new ArrayList<>(posts);
 
         List<Article> articles = new ArrayList<>();
-
-        int count = 0;
-        for (String postId : postIds) {
-            if (count == 100) {
-                break;
+        for (int i = 0; i < postIds.size(); i++) {
+            if (i % 1000 == 0 && !articles.isEmpty()) {
+                articleDao.addArticles(articles);
+                articles = new ArrayList<>();
+                System.out.println(i);
             }
-            count++;
-            System.out.println(count);
             try {
-                Document doc = Jsoup.connect(URL + postId + "/").get();
+                Document doc = Jsoup.connect(URL + postIds.get(i) + "/").get();
 
                 Article article = Article.builder()
                         .title(doc.select("h1 > span").text())
@@ -82,6 +82,8 @@ public class InsertData {
             }
         }
 
-        articleDao.addArticles(articles);
+        if (!articles.isEmpty()) {
+            articleDao.addArticles(articles);
+        }
     }
 }
