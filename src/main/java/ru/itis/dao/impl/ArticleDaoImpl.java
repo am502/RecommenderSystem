@@ -12,8 +12,8 @@ import java.util.List;
 
 @Repository
 public class ArticleDaoImpl implements ArticleDao {
-    private static final String INSERT_ARTICLE = "INSERT INTO articles (title, content, owner_id) " +
-            "VALUES (:title, :content, :ownerId);";
+    private static final String INSERT_ARTICLE = "INSERT INTO articles (article_id, title, content, owner_id) " +
+            "VALUES (:articleId, :title, :content, :ownerId);";
 
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 

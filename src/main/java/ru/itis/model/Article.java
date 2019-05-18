@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Article {
+    private String articleId;
     private String title;
     private String content;
     private long ownerId;

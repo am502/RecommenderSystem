@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS articles (
-  article_id BIGSERIAL PRIMARY KEY,
+  article_id VARCHAR(256) PRIMARY KEY,
   title VARCHAR(512),
   content TEXT,
   owner_id BIGINT REFERENCES users(user_id)

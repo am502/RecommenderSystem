@@ -65,9 +65,11 @@ public class InsertData {
                 System.out.println(i);
             }
             try {
-                Document doc = Jsoup.connect(URL + postIds.get(i) + "/").get();
+                String postId = postIds.get(i);
+                Document doc = Jsoup.connect(URL + postId + "/").get();
 
                 Article article = Article.builder()
+                        .articleId(postId)
                         .title(doc.select("h1 > span").text())
                         .content(doc.select("div[class=post__body post__body_full]").text())
                         .ownerId(random.nextInt(userId) + 1)
