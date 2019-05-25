@@ -1,4 +1,4 @@
-package ru.itis.dao;
+package ru.itis.dao.interfaces;
 
 import ru.itis.model.User;
 

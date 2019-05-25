@@ -1,10 +1,10 @@
-package ru.itis.utils;
+package ru.itis.util;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import ru.itis.dao.ArticleDao;
-import ru.itis.dao.UserDao;
+import ru.itis.dao.interfaces.ArticleDao;
+import ru.itis.dao.interfaces.UserDao;
 import ru.itis.dao.impl.ArticleDaoImpl;
 import ru.itis.dao.impl.UserDaoImpl;
 import ru.itis.model.Article;
@@ -58,7 +58,7 @@ public class InsertData {
         List<String> postIds = new ArrayList<>(posts);
 
         List<Article> articles = new ArrayList<>();
-        for (int i = 0; i < postIds.size(); i++) {
+        for (int i = 22000; i < postIds.size(); i++) {
             if (i % 1000 == 0 && !articles.isEmpty()) {
                 articleDao.addArticles(articles);
                 articles = new ArrayList<>();

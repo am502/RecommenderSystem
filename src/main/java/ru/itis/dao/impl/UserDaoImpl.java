@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.stereotype.Repository;
-import ru.itis.dao.UserDao;
+import ru.itis.dao.interfaces.UserDao;
 import ru.itis.dao.config.DaoConfig;
 import ru.itis.model.User;
 
