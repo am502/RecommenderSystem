@@ -1,5 +1,6 @@
 package ru.itis.dao.impl;
 
+import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
@@ -19,6 +20,12 @@ public class ArticleDaoImpl implements ArticleDao {
 
     public ArticleDaoImpl() {
         namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(DaoConfig.dataSource());
+    }
+
+    @Override
+    public void addArticle(Article article) {
+        SqlParameterSource parameters = new BeanPropertySqlParameterSource(article);
+        namedParameterJdbcTemplate.update(INSERT_ARTICLE, parameters);
     }
 
     @Override

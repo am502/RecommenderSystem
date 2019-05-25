@@ -4,14 +4,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itis.dao.interfaces.ArticleDao;
+import ru.itis.dao.interfaces.ArticleWordDao;
 import ru.itis.dao.interfaces.UserDao;
+import ru.itis.dao.interfaces.WordDao;
 import ru.itis.dto.RequestArticleDto;
+import ru.itis.model.ArticleWord;
 import ru.itis.service.interfaces.UserService;
 import ru.itis.util.Utils;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -20,17 +23,40 @@ public class UserServiceImpl implements UserService {
     private UserDao userDao;
     @Autowired
     private ArticleDao articleDao;
+    @Autowired
+    private WordDao wordDao;
+    @Autowired
+    private ArticleWordDao articleWordDao;
 
     @Override
     public void addArticle(RequestArticleDto requestArticleDto) {
-        List<String> processedWords = new LinkedList<>();
+        String articleId = UUID.randomUUID().toString();
+        Map<String, Integer> wordsWithCount = new HashMap<>();
+        int totalWordCount = 0;
         Matcher matcher = Utils.getInstance().getRussianWordsPattern().matcher(requestArticleDto.getContent());
         while (matcher.find()) {
             String word = matcher.group().toLowerCase();
             if (!Utils.getInstance().getStopWords().contains(word) && word.length() >= 2) {
                 String processedWord = Utils.getInstance().processPorterStem(word);
-                processedWords.add(processedWord);
+                if (wordsWithCount.containsKey(processedWord)) {
+                    wordsWithCount.put(processedWord, wordsWithCount.get(processedWord) + 1);
+                } else {
+                    wordsWithCount.put(processedWord, 1);
+                }
+                totalWordCount++;
             }
         }
+        List<String> words = new ArrayList<>(wordsWithCount.keySet());
+        wordDao.addWords(words);
+        List<ArticleWord> articleWords = new LinkedList<>();
+        for (Map.Entry<String, Integer> entry : wordsWithCount.entrySet()) {
+            ArticleWord articleWord = ArticleWord.builder()
+                    .articleId(articleId)
+                    .word(entry.getKey())
+                    .tf((double) entry.getValue() / totalWordCount)
+                    .build();
+            articleWords.add(articleWord);
+        }
+        articleWordDao.addArticleWords(articleWords);
     }
 }
