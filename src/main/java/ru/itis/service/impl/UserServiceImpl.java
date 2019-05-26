@@ -8,13 +8,14 @@ import ru.itis.dao.interfaces.ArticleWordDao;
 import ru.itis.dao.interfaces.UserDao;
 import ru.itis.dao.interfaces.WordDao;
 import ru.itis.dto.RequestArticleDto;
+import ru.itis.model.Article;
 import ru.itis.model.ArticleWord;
+import ru.itis.model.User;
 import ru.itis.service.interfaces.UserService;
 import ru.itis.util.Utils;
 
 import java.util.*;
 import java.util.regex.Matcher;
-import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -29,7 +30,7 @@ public class UserServiceImpl implements UserService {
     private ArticleWordDao articleWordDao;
 
     @Override
-    public void addArticle(RequestArticleDto requestArticleDto) {
+    public void addArticle(RequestArticleDto requestArticleDto, String token) {
         String articleId = UUID.randomUUID().toString();
         Map<String, Integer> wordsWithCount = new HashMap<>();
         int totalWordCount = 0;
@@ -46,6 +47,14 @@ public class UserServiceImpl implements UserService {
                 totalWordCount++;
             }
         }
+        User user = userDao.getUserByToken(token);
+        Article article = Article.builder()
+                .articleId(articleId)
+                .title(requestArticleDto.getTitle())
+                .content(requestArticleDto.getContent())
+                .ownerId(user.getId())
+                .build();
+        articleDao.addArticle(article);
         List<String> words = new ArrayList<>(wordsWithCount.keySet());
         wordDao.addWords(words);
         List<ArticleWord> articleWords = new LinkedList<>();

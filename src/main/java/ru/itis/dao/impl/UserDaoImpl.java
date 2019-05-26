@@ -32,4 +32,11 @@ public class UserDaoImpl implements UserDao {
         SqlParameterSource[] batch = SqlParameterSourceUtils.createBatch(users.toArray());
         namedParameterJdbcTemplate.batchUpdate(INSERT_USER, batch);
     }
+
+    @Override
+    public User getUserByToken(String token) {
+        return null;
+    }
+
+
 }
