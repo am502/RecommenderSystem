@@ -3,14 +3,14 @@ package ru.itis.util;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import ru.itis.dao.interfaces.ArticleDao;
-import ru.itis.dao.interfaces.UserDao;
 import ru.itis.dao.impl.ArticleDaoImpl;
 import ru.itis.dao.impl.UserDaoImpl;
+import ru.itis.dao.interfaces.ArticleDao;
+import ru.itis.dao.interfaces.UserDao;
 import ru.itis.model.Article;
 import ru.itis.model.User;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
@@ -24,22 +24,22 @@ public class InsertData {
         UserDao userDao = new UserDaoImpl();
         ArticleDao articleDao = new ArticleDaoImpl();
 
-        Scanner sc = null;
+        Scanner in = null;
         try {
-            sc = new Scanner(new File("src/main/resources/dataset/user_fav.csv"));
+            in = new Scanner(new FileInputStream("src/main/resources/dataset/user_fav.csv"));
+            in.nextLine();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        sc.nextLine();
 
+        List<User> users = new LinkedList<>();
         Set<String> posts = new HashSet<>();
-        List<User> users = new ArrayList<>();
 
         int userId = 0;
-        while (sc.hasNextLine()) {
+        while (in.hasNextLine()) {
             userId++;
 
-            String[] line = sc.nextLine().split(",");
+            String[] line = in.nextLine().split(",");
 
             User user = User.builder()
                     .username(line[0])
@@ -57,11 +57,11 @@ public class InsertData {
 
         List<String> postIds = new ArrayList<>(posts);
 
-        List<Article> articles = new ArrayList<>();
+        List<Article> articles = new LinkedList<>();
         for (int i = 22000; i < postIds.size(); i++) {
             if (i % 1000 == 0 && !articles.isEmpty()) {
                 articleDao.addArticles(articles);
-                articles = new ArrayList<>();
+                articles = new LinkedList<>();
                 System.out.println(i);
             }
             try {
