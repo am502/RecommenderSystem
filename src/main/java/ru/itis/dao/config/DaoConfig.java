@@ -1,22 +1,21 @@
 package ru.itis.dao.config;
 
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import ru.itis.util.PropertiesLoader;
 
 import javax.sql.DataSource;
+import java.util.Properties;
 
 public class DaoConfig {
-    private static final String DB_URL = "jdbc:postgresql://localhost:5432/rs";
-    private static final String DB_USERNAME = "postgres";
-    private static final String DB_PASSWORD = "postgres1";
-    private static final String DB_DRIVER_CLASSNAME = "org.postgresql.Driver";
-
     public static DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
-        dataSource.setUrl(DB_URL);
-        dataSource.setUsername(DB_USERNAME);
-        dataSource.setPassword(DB_PASSWORD);
-        dataSource.setDriverClassName(DB_DRIVER_CLASSNAME);
+        Properties settings = PropertiesLoader.getProperties();
+
+        dataSource.setUrl(settings.getProperty("db.url"));
+        dataSource.setUsername(settings.getProperty("db.username"));
+        dataSource.setPassword(settings.getProperty("db.password"));
+        dataSource.setDriverClassName(settings.getProperty("db.driver"));
 
         return dataSource;
     }

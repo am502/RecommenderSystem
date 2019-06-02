@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
         Matcher matcher = Utils.getInstance().getRussianWordsPattern().matcher(requestArticleDto.getContent());
         while (matcher.find()) {
             String word = matcher.group().toLowerCase();
-            if (!Utils.getInstance().getStopWords().contains(word) && word.length() >= 2) {
+            if (!Utils.getInstance().getStopWords().contains(word) && word.length() >= 3) {
                 String processedWord = Utils.getInstance().processPorterStem(word);
                 if (wordsWithCount.containsKey(processedWord)) {
                     wordsWithCount.put(processedWord, wordsWithCount.get(processedWord) + 1);

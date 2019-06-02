@@ -35,7 +35,9 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public User getUserByToken(String token) {
-        return null;
+        return User.builder()
+                .id(1)
+                .build();
     }
 
 
