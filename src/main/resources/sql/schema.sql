@@ -62,3 +62,21 @@ BEGIN
   RETURN (dividend / (SELECT sqrt(a1_length)) / (SELECT sqrt(a2_length)));
 END; $$
 LANGUAGE 'plpgsql';
+
+CREATE OR REPLACE FUNCTION get_similar_articles(a_id VARCHAR, n INT)
+  RETURNS SETOF articles AS $$
+DECLARE
+  r RECORD;
+BEGIN
+  CREATE TEMP TABLE article_measure (article_id VARCHAR(256), measure FLOAT);
+  FOR r IN SELECT article_id FROM articles WHERE article_id <> a_id
+  LOOP
+    INSERT INTO article_measure (article_id, measure)
+    SELECT r.article_id, measure FROM cosine_measure(a_id, r.article_id) AS measure;
+  END LOOP;
+  RETURN QUERY
+    SELECT a.* FROM articles a INNER JOIN article_measure am ON a.article_id = am.article_id
+    ORDER BY (am.measure) LIMIT n;
+  DROP TABLE article_measure;
+END; $$
+LANGUAGE 'plpgsql';

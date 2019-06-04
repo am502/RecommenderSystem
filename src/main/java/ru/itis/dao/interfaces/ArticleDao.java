@@ -8,4 +8,8 @@ public interface ArticleDao {
     void addArticle(Article article);
 
     void addArticles(List<Article> articles);
+
+    Article getArticleById(String articleId);
+
+    List<Article> getSimilarArticles(String articleId, int limit);
 }

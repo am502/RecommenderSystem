@@ -2,7 +2,7 @@ package ru.itis.util;
 
 import opennlp.tools.stemmer.snowball.SnowballStemmer;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -20,10 +20,9 @@ public class Utils {
         processorPorterStem = new SnowballStemmer(SnowballStemmer.ALGORITHM.RUSSIAN);
         russianWordsPattern = Pattern.compile("[А-Яа-яЁё]+(-[А-Яа-яЁё]+)*");
         stopWords = new HashSet<>();
-        try {
-            Scanner scanner = new Scanner(new File("src/main/resources/stopwords-ru.txt"));
-            while (scanner.hasNextLine()) {
-                stopWords.add(scanner.nextLine());
+        try (Scanner in = new Scanner(new FileInputStream("src/main/resources/stopwords-ru.txt"))) {
+            while (in.hasNextLine()) {
+                stopWords.add(in.nextLine());
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();

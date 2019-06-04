@@ -1,5 +1,4 @@
-package ru.itis.dto;
-
+package ru.itis.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,8 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ResponseArticleDto {
+public class RequestArticleDto {
     private String title;
     private String content;
-    private String ownerName;
 }

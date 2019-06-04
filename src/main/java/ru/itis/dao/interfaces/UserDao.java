@@ -10,4 +10,6 @@ public interface UserDao {
     void addUsers(List<User> users);
 
     User getUserByToken(String token);
+
+    User getUserById(long userId);
 }
