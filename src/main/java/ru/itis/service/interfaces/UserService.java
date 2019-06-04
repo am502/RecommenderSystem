@@ -7,4 +7,6 @@ public interface UserService {
     void addArticle(RequestArticleDto requestArticleDto, String token);
 
     ResponseArticleDto getArticleById(String articleId, String token);
+
+    void addToFavorites(String articleId, String token);
 }

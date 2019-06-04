@@ -51,14 +51,14 @@ BEGIN
   SELECT COUNT(*) INTO total_articles_count FROM articles;
   SELECT SUM(a1.tf * (SELECT idf(a1.word, total_articles_count))
     * a2.tf * (SELECT idf(a2.word, total_articles_count))) INTO dividend
-  FROM article_words a1 INNER JOIN article_words a2 ON a1.word = a2.word
-  WHERE a1.article_id = a1_id AND a2.article_id = a2_id;
+  FROM article_words a1 INNER JOIN article_words a2 ON a1.word = a2.word INNER JOIN words w ON w.word = a1.word
+  WHERE a1.article_id = a1_id AND a2.article_id = a2_id AND w.articles_count > 7267;
   SELECT SUM(a1.tf * (SELECT idf(a1.word, total_articles_count))
     * a1.tf * (SELECT idf(a1.word, total_articles_count))) INTO a1_length
-  FROM article_words a1 WHERE a1.article_id = a1_id;
+  FROM article_words a1 INNER JOIN words w ON w.word = a1.word WHERE a1.article_id = a1_id AND w.articles_count > 7267;
   SELECT SUM(a2.tf * (SELECT idf(a2.word, total_articles_count))
     * a2.tf * (SELECT idf(a2.word, total_articles_count))) INTO a2_length
-  FROM article_words a2 WHERE a2.article_id = a2_id;
+  FROM article_words a2 INNER JOIN words w ON w.word = a2.word WHERE a2.article_id = a2_id AND w.articles_count > 7267;
   RETURN (dividend / (SELECT sqrt(a1_length)) / (SELECT sqrt(a2_length)));
 END; $$
 LANGUAGE 'plpgsql';
@@ -80,3 +80,5 @@ BEGIN
   DROP TABLE article_measure;
 END; $$
 LANGUAGE 'plpgsql';
+
+SELECT * FROM get_similar_articles('100227', 10);

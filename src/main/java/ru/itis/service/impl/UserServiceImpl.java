@@ -4,16 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itis.conversion.ArticlesToRecommendationDtosConverter;
-import ru.itis.dao.interfaces.ArticleDao;
-import ru.itis.dao.interfaces.ArticleWordDao;
-import ru.itis.dao.interfaces.UserDao;
-import ru.itis.dao.interfaces.WordDao;
+import ru.itis.dao.interfaces.*;
 import ru.itis.dto.request.RequestArticleDto;
 import ru.itis.dto.response.RecommendationDto;
 import ru.itis.dto.response.ResponseArticleDto;
 import ru.itis.model.Article;
 import ru.itis.model.ArticleWord;
 import ru.itis.model.User;
+import ru.itis.model.UserItem;
 import ru.itis.service.interfaces.UserService;
 import ru.itis.util.Constants;
 import ru.itis.util.Utils;
@@ -32,6 +30,8 @@ public class UserServiceImpl implements UserService {
     private WordDao wordDao;
     @Autowired
     private ArticleWordDao articleWordDao;
+    @Autowired
+    private UserItemDao userItemDao;
 
     @Override
     public void addArticle(RequestArticleDto requestArticleDto, String token) {
@@ -78,15 +78,33 @@ public class UserServiceImpl implements UserService {
         User user = userDao.getUserByToken(token);
         Article article = articleDao.getArticleById(articleId);
         User articleOwner = userDao.getUserById(article.getOwnerId());
-        List<Article> similarArticles = articleDao.getSimilarArticles(articleId, Constants.LIMIT_CONTENT_FILTERING);
         List<RecommendationDto> contentRecommendations = ArticlesToRecommendationDtosConverter.getInstance()
-                .convert(similarArticles);
+                .convert(articleDao.getSimilarArticles(articleId, Constants.LIMIT_CONTENT_FILTERING));
+        List<RecommendationDto> collaborativeRecommendations = null;
         return ResponseArticleDto.builder()
                 .title(article.getTitle())
                 .content(article.getContent())
                 .ownerName(articleOwner.getUsername())
                 .contentRecommendations(contentRecommendations)
-                .collaborativeRecommendations(null)
+                .collaborativeRecommendations(collaborativeRecommendations)
                 .build();
+    }
+
+    @Override
+    public void addToFavorites(String articleId, String token) {
+        User user = userDao.getUserByToken(token);
+        UserItem userItem = UserItem.builder()
+                .userId(user.getId())
+                .articleId(articleId)
+                .build();
+        userItemDao.addUserItem(userItem);
+    }
+
+    public void setWordDao(WordDao wordDao) {
+        this.wordDao = wordDao;
+    }
+
+    public void setArticleWordDao(ArticleWordDao articleWordDao) {
+        this.articleWordDao = articleWordDao;
     }
 }
