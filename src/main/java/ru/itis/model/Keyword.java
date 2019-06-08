@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ArticleWord {
+public class Keyword {
     private String articleId;
     private String word;
     private double tf;

@@ -1,7 +1,7 @@
 package ru.itis.service.interfaces;
 
-import java.util.Scanner;
+import java.io.File;
 
 public interface MainService {
-	void upload(String url, Scanner in);
+	void upload(String url, File file);
 }

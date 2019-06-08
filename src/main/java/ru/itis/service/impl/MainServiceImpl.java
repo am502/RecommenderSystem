@@ -6,12 +6,16 @@ import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.itis.dao.interfaces.*;
+import ru.itis.dao.interfaces.ArticleDao;
+import ru.itis.dao.interfaces.UserDao;
+import ru.itis.dao.interfaces.UserItemDao;
 import ru.itis.model.Article;
 import ru.itis.model.User;
 import ru.itis.model.UserItem;
 import ru.itis.service.interfaces.MainService;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,82 +23,84 @@ import java.util.stream.Collectors;
 @Transactional
 @Service
 public class MainServiceImpl implements MainService {
-	@Autowired
-	private UserDao userDao;
-	@Autowired
-	private ArticleDao articleDao;
-	@Autowired
-	private WordDao wordDao;
-	@Autowired
-	private ArticleWordDao articleWordDao;
-	@Autowired
-	private UserItemDao userItemDao;
+    @Autowired
+    private UserDao userDao;
+    @Autowired
+    private ArticleDao articleDao;
+    @Autowired
+    private UserItemDao userItemDao;
 
-	@Override
-	public void upload(String url, Scanner in) {
-		long userId = userDao.getMaxId();
+    @Override
+    public void upload(String url, File file) {
+        Scanner in = null;
+        try {
+            in = new Scanner(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        long userId = userDao.getMaxId();
 
-		Map<String, Long> users = new HashMap<>();
-		List<UserItem> userItems = new LinkedList<>();
-		Set<String> articleIds = new HashSet<>();
+        Map<String, Long> users = new HashMap<>();
+        List<UserItem> userItems = new LinkedList<>();
+        Set<String> articleIds = new HashSet<>();
 
-		while (in.hasNextLine()) {
-			String[] line = in.nextLine().split(" ");
-			if (line.length == 2) {
-				UserItem userItem;
-				if (users.containsKey(line[1])) {
-					userItem = UserItem.builder()
-							.userId(users.get(line[1]))
-							.articleId(line[0])
-							.build();
-				} else {
-					userId++;
-					users.put(line[1], userId);
-					userItem = UserItem.builder()
-							.userId(userId)
-							.articleId(line[0])
-							.build();
-				}
-				userItems.add(userItem);
-			}
-			articleIds.add(line[0]);
-		}
+        while (in.hasNextLine()) {
+            String[] line = in.nextLine().split(" ");
+            if (line.length == 2) {
+                UserItem userItem;
+                if (users.containsKey(line[1])) {
+                    userItem = UserItem.builder()
+                            .userId(users.get(line[1]))
+                            .articleId(line[0])
+                            .build();
+                } else {
+                    userId++;
+                    users.put(line[1], userId);
+                    userItem = UserItem.builder()
+                            .userId(userId)
+                            .articleId(line[0])
+                            .build();
+                }
+                userItems.add(userItem);
+            }
+            articleIds.add(line[0]);
+        }
 
 
-		userDao.addUsers(users.entrySet().stream()
-				.map(e -> User.builder()
-						.username(e.getKey())
-						.userId(e.getValue())
-						.build())
-				.collect(Collectors.toList()));
+        userDao.addUsers(users.entrySet().stream()
+                .map(e -> User.builder()
+                        .username(e.getKey())
+                        .userId(e.getValue())
+                        .build())
+                .collect(Collectors.toList()));
 
-		List<Article> articles = new LinkedList<>();
+        List<Article> articles = new LinkedList<>();
 
-		for (String articleId : articleIds) {
-			try {
-				Document document = Jsoup.connect(url + articleId).get();
+        for (String articleId : articleIds) {
+            try {
+                Document document = Jsoup.connect(url + articleId).get();
 
-				Article article = Article.builder()
-						.articleId(articleId)
-						.title(document.select("h1 > span").text())
-						.content(document.select("div[class=post__body post__body_full]").text())
-						.build();
+                Article article = Article.builder()
+                        .articleId(articleId)
+                        .title(document.select("h1 > span").text())
+                        .content(document.select("div[class=post__body post__body_full]").text())
+                        .build();
 
-				if (!article.getContent().isEmpty()) {
-					articles.add(article);
-				}
-			} catch (HttpStatusException ignored) {
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+                if (!article.getContent().isEmpty()) {
+                    articles.add(article);
+                }
+            } catch (HttpStatusException ignored) {
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
-		articleDao.addArticles(articles);
-	}
+        articleDao.addArticles(articles);
+    }
 
-	public void addKeywords(Article article) {
+    public void addKeywords(Article article) {
 
-	}
+    }
 
 //    @Override
 //    public void addArticle(RequestArticleDto requestArticleDto, String token) {
@@ -160,12 +166,4 @@ public class MainServiceImpl implements MainService {
 //                .build();
 //        userItemDao.addUserItem(userItem);
 //    }
-
-	public void setWordDao(WordDao wordDao) {
-		this.wordDao = wordDao;
-	}
-
-	public void setArticleWordDao(ArticleWordDao articleWordDao) {
-		this.articleWordDao = articleWordDao;
-	}
 }

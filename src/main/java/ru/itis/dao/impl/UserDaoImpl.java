@@ -12,22 +12,22 @@ import java.util.List;
 
 @Repository
 public class UserDaoImpl implements UserDao {
-	private static final String INSERT_USER = "INSERT INTO users (user_id, username) VALUES (:userId, :username);";
-	private static final String GET_MAX_ID = "SELECT COALESCE(MAX(user_id), 0) FROM users;";
+    private static final String INSERT_USER = "INSERT INTO users (user_id, username) VALUES (:userId, :username);";
+    private static final String GET_MAX_ID = "SELECT COALESCE(MAX(user_id), 0) FROM users;";
 
-	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-	public UserDaoImpl() {
-		namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(DaoConfig.dataSource());
-	}
+    public UserDaoImpl() {
+        namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(DaoConfig.dataSource());
+    }
 
-	@Override
-	public void addUsers(List<User> users) {
-		SqlParameterSource[] batch = SqlParameterSourceUtils.createBatch(users.toArray());
-		namedParameterJdbcTemplate.batchUpdate(INSERT_USER, batch);
-	}
+    @Override
+    public void addUsers(List<User> users) {
+        SqlParameterSource[] batch = SqlParameterSourceUtils.createBatch(users.toArray());
+        namedParameterJdbcTemplate.batchUpdate(INSERT_USER, batch);
+    }
 
-	public long getMaxId() {
-		return namedParameterJdbcTemplate.getJdbcTemplate().queryForObject(GET_MAX_ID, Long.class);
-	}
+    public long getMaxId() {
+        return namedParameterJdbcTemplate.getJdbcTemplate().queryForObject(GET_MAX_ID, Long.class);
+    }
 }

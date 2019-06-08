@@ -14,11 +14,6 @@ public class ArticleDaoImpl implements ArticleDao {
     private static final String INSERT_ARTICLE = "INSERT INTO articles (article_id, title, content, owner_id) " +
             "VALUES (:articleId, :title, :content, :ownerId);";
     private static final String GET_ARTICLE_BY_ID = "SELECT * FROM articles WHERE article_id = :articleId;";
-    private static final String GET_ALL_ARTICLES = "SELECT * FROM articles;";
-    private static final String GET_SIMILAR_ARTICLES = "SELECT * FROM get_similar_articles(:articleId, :limit);";
-    private static final String ARTICLE_EXISTENCE_BY_ID = "SELECT CASE WHEN EXISTS " +
-            "(SELECT 1 FROM articles WHERE articleId = :articleId) " +
-            "THEN TRUE ELSE FALSE END;";
 
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -45,22 +40,7 @@ public class ArticleDaoImpl implements ArticleDao {
     }
 
     @Override
-    public List<Article> getAllArticles() {
-        return namedParameterJdbcTemplate.query(GET_ALL_ARTICLES, new BeanPropertyRowMapper<>(Article.class));
-    }
-
-    @Override
-    public List<Article> getSimilarArticles(String articleId, int limit) {
-        MapSqlParameterSource parameters = new MapSqlParameterSource();
-        parameters.addValue("articleId", articleId);
-        parameters.addValue("limit", limit);
-        return namedParameterJdbcTemplate.query(GET_SIMILAR_ARTICLES, parameters,
-                new BeanPropertyRowMapper<>(Article.class));
-    }
-
-    @Override
-    public boolean articleExistenceById(String articleId) {
-        return namedParameterJdbcTemplate.queryForObject(ARTICLE_EXISTENCE_BY_ID, new MapSqlParameterSource()
-                .addValue("articleId", articleId), Boolean.class);
+    public List<Article> getSimilarArticles(String articleId) {
+        return null;
     }
 }

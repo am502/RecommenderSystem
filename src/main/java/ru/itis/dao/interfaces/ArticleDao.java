@@ -11,9 +11,5 @@ public interface ArticleDao {
 
     Article getArticleById(String articleId);
 
-    List<Article> getAllArticles();
-
-    List<Article> getSimilarArticles(String articleId, int limit);
-
-    boolean articleExistenceById(String articleId);
+    List<Article> getSimilarArticles(String articleId);
 }

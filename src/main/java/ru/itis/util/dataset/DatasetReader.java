@@ -7,13 +7,13 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 public class DatasetReader {
-	public static Scanner getScanner(String path) {
-		Scanner in = null;
-		try {
-			in = new Scanner(new FileInputStream(Constants.PATH_TO_RESOURCES + path));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		return in;
-	}
+    public static Scanner getScanner(String path) {
+        Scanner in = null;
+        try {
+            in = new Scanner(new FileInputStream(Constants.PATH_TO_RESOURCES + path));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return in;
+    }
 }
