@@ -33,12 +33,12 @@ CREATE TABLE IF NOT EXISTS lengths (
 );
 
 CREATE OR REPLACE FUNCTION cosine_measure(a1_id VARCHAR, a2_id VARCHAR)
-  RETURNS DOUBLE PRECISION AS $$
+  RETURNS FLOAT AS $$
 BEGIN
-  RETURN ((SELECT SUM(a1.tf * a2.tf) FROM keywords a1 INNER JOIN keywords a2 ON a1.keyword_id = a2.keyword_id
+  RETURN ((SELECT SUM(a1.tf * a2.tf) FROM keywords a1 INNER JOIN keywords a2 ON a1.word = a2.word
     WHERE a1.article_id = a1_id AND a2.article_id = a2_id)
-    / (SELECT length FROM lengths WHERE article_id = a1_id)::DOUBLE PRECISION
-    / (SELECT length FROM lengths WHERE article_id = a2_id)::DOUBLE PRECISION);
+    / (SELECT length FROM lengths WHERE article_id = a1_id)
+    / (SELECT length FROM lengths WHERE article_id = a2_id));
 END; $$
 LANGUAGE 'plpgsql';
 
@@ -47,7 +47,7 @@ CREATE OR REPLACE FUNCTION get_similar_articles(a_id VARCHAR, n INT)
 DECLARE
   r RECORD;
 BEGIN
-  CREATE TEMP TABLE article_measure (article_id VARCHAR(255), measure DOUBLE PRECISION);
+  CREATE TEMP TABLE article_measure (article_id VARCHAR(255), measure FLOAT);
   FOR r IN SELECT article_id FROM articles WHERE article_id <> a_id
     LOOP
       INSERT INTO article_measure (article_id, measure)
@@ -59,5 +59,3 @@ BEGIN
   DROP TABLE article_measure;
 END; $$
 LANGUAGE 'plpgsql';
-
-select get_similar_articles('455345',10)
