@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itis.dao.interfaces.*;
+import ru.itis.dto.ContentRecommendationsDto;
 import ru.itis.model.*;
 import ru.itis.util.Constants;
 import ru.itis.util.Utils;
@@ -77,11 +78,9 @@ public class MainServiceImpl implements MainService {
 	}
 
 	public void addArticles(String url, Set<String> articleIds) {
-		List<Article> articles = new LinkedList<>();
-
 		for (String articleId : articleIds) {
 			try {
-				Document document = Jsoup.connect(url + articleId).get();
+				Document document = Jsoup.connect(url + "/" + articleId).get();
 
 				Article article = Article.builder()
 						.articleId(articleId)
@@ -90,7 +89,7 @@ public class MainServiceImpl implements MainService {
 						.build();
 
 				if (!article.getContent().isEmpty()) {
-					articles.add(article);
+					articleDao.addArticle(article);
 					addKeywords(article);
 				}
 			} catch (HttpStatusException ignored) {
@@ -98,8 +97,6 @@ public class MainServiceImpl implements MainService {
 				e.printStackTrace();
 			}
 		}
-
-		articleDao.addArticles(articles);
 	}
 
 	public void addKeywords(Article article) {
@@ -136,5 +133,23 @@ public class MainServiceImpl implements MainService {
 				.articleId(article.getArticleId())
 				.length(Math.sqrt(length))
 				.build());
+	}
+
+	@Override
+	public ContentRecommendationsDto getArticleByTitle(String title) {
+		Article article = articleDao.getArticleByTitle(title);
+		List<Article> recommendations = articleDao.getSimilarArticles(article.getArticleId());
+		return ContentRecommendationsDto.builder()
+				.article(article)
+				.recommendations(recommendations)
+				.build();
+	}
+
+	public void setKeywordDao(KeywordDao keywordDao) {
+		this.keywordDao = keywordDao;
+	}
+
+	public void setLengthDao(LengthDao lengthDao) {
+		this.lengthDao = lengthDao;
 	}
 }
