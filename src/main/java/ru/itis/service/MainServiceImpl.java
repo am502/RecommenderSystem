@@ -29,7 +29,7 @@ public class MainServiceImpl implements MainService {
 	@Autowired
 	private KeywordDao keywordDao;
 	@Autowired
-	private LengthDao lengthDao;
+	private SimilarityDao similarityDao;
 
 	@Override
 	public void upload(String url, Scanner in) {
@@ -120,6 +120,23 @@ public class MainServiceImpl implements MainService {
 				.limit(Constants.KEYWORDS_LIMIT)
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k, v) -> k, LinkedHashMap::new));
 
+		Map<String, Double> multiplication = new HashMap<>();
+		Map<String, Double> articleLengths = new HashMap<>();
+
+		List<Keyword> keywords = keywordDao.getAllKeywords();
+
+		if (keywords != null) {
+			for (Keyword keyword : keywords) {
+				if (popularWords.containsKey(keyword.getWord())) {
+					multiplication.put(keyword.getArticleId(),
+							multiplication.getOrDefault(keyword.getArticleId(), 0.0)
+									+ popularWords.get(keyword.getWord()) * keyword.getTf());
+					articleLengths.put(keyword.getArticleId(), articleLengths.getOrDefault(
+							keyword.getArticleId(), 0.0) + keyword.getTf() * keyword.getTf());
+				}
+			}
+		}
+
 		keywordDao.addKeywords(popularWords.entrySet().stream()
 				.map(e -> Keyword.builder()
 						.articleId(article.getArticleId())
@@ -129,10 +146,19 @@ public class MainServiceImpl implements MainService {
 				.collect(Collectors.toList()));
 
 		double length = popularWords.values().stream().mapToDouble(v -> v * v).sum();
-		lengthDao.addLength(Length.builder()
-				.articleId(article.getArticleId())
-				.length(Math.sqrt(length))
-				.build());
+
+		if (keywords != null) {
+			List<Similarity> similarities = new LinkedList<>();
+			for (Map.Entry<String, Double> entry : multiplication.entrySet()) {
+				similarities.add(Similarity.builder()
+						.firstArticleId(article.getArticleId())
+						.secondArticleId(entry.getKey())
+						.similarity(entry.getValue() / Math.sqrt(length)
+								/ Math.sqrt(articleLengths.get(entry.getKey())))
+						.build());
+			}
+			similarityDao.addSimilarities(similarities);
+		}
 	}
 
 	@Override
@@ -149,7 +175,7 @@ public class MainServiceImpl implements MainService {
 		this.keywordDao = keywordDao;
 	}
 
-	public void setLengthDao(LengthDao lengthDao) {
-		this.lengthDao = lengthDao;
+	public void setSimilarityDao(SimilarityDao similarityDao) {
+		this.similarityDao = similarityDao;
 	}
 }

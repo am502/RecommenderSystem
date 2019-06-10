@@ -18,7 +18,12 @@ public class ArticleDaoImpl implements ArticleDao {
 	private static final String INSERT_ARTICLE = "INSERT INTO articles (article_id, title, content) " +
 			"VALUES (:articleId, :title, :content);";
 	private static final String GET_ARTICLE_BY_ID = "SELECT * FROM articles WHERE title = :title;";
-	private static final String GET_SIMILAR_ARTICLES = "SELECT * FROM get_similar_articles(:articleId, :limit);";
+	private static final String GET_SIMILAR_ARTICLES = "SELECT a.* FROM articles a INNER JOIN (" +
+			"SELECT first_article_id AS first, second_article_id AS second, similarity " +
+			"FROM similarities WHERE first_article_id = :articleId UNION ALL " +
+			"SELECT second_article_id AS first, first_article_id AS second, similarity " +
+			"FROM similarities WHERE second_article_id = :articleId) s " +
+			"ON s.second = a.article_id ORDER BY (s.similarity) LIMIT :limit";
 	private static final String GET_ALL_ARTICLES = "SELECT * FROM articles;";
 
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;

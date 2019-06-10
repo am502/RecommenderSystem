@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Length {
-    private String articleId;
-    private double length;
+public class Similarity {
+	private String firstArticleId;
+	private String secondArticleId;
+	private double similarity;
 }
