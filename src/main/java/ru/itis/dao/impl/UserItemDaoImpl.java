@@ -19,8 +19,8 @@ public class UserItemDaoImpl implements UserItemDao {
 	private static final String INSERT_USER_ITEM = "INSERT INTO user_item (user_id, article_id) " +
 			"VALUES (?, ?) ON CONFLICT (article_id) DO NOTHING;";
 	private static final String GET_POPULAR_USER_ITEMS = "SELECT ui.* FROM user_item ui " +
-			"INNER JOIN (SELECT user_id FROM user_item WHERE COUNT(article_id) >= :cv " +
-			"GROUP BY (user_id)) pu ON ui.user_id = pu.user_id;";
+			"INNER JOIN (SELECT user_id, COUNT(article_id) AS cnt FROM user_item " +
+			"GROUP BY (user_id)) pu ON ui.user_id = pu.user_id WHERE pu.cnt >= :cv;";
 
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 

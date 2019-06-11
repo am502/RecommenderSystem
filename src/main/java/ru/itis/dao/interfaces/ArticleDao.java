@@ -12,4 +12,6 @@ public interface ArticleDao {
 	List<Article> getSimilarArticles(String articleId);
 
 	List<Article> getAllArticles();
+
+	List<Article> getAllArticlesUserNotRate(long userId);
 }

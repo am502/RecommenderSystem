@@ -149,7 +149,7 @@ public class MainServiceImpl implements MainService {
 		double length = popularWords.values().stream().mapToDouble(v -> v * v).sum();
 
 		if (keywords != null) {
-			List<Similarity> similarities = new LinkedList<>();
+			List<Similarity> similarities = new ArrayList<>();
 			for (Map.Entry<String, Double> entry : multiplication.entrySet()) {
 				similarities.add(Similarity.builder()
 						.firstArticleId(article.getArticleId())
@@ -158,7 +158,8 @@ public class MainServiceImpl implements MainService {
 								/ Math.sqrt(articleLengths.get(entry.getKey())))
 						.build());
 			}
-			similarityDao.addSimilarities(similarities);
+			similarities.sort(Comparator.comparingDouble(Similarity::getSimilarity).reversed());
+			similarityDao.addSimilarities(similarities.stream().limit(Constants.N).collect(Collectors.toList()));
 		}
 	}
 
@@ -192,8 +193,9 @@ public class MainServiceImpl implements MainService {
 
 		Map<Long, Map<Long, Double>> userUser = new HashMap<>();
 		for (Map.Entry<Long, Set<String>> currentUser : userArticles.entrySet()) {
+			Map<Long, Double> userSim = new HashMap<>();
 			for (Map.Entry<Long, Set<String>> otherUser : userArticles.entrySet()) {
-				if (currentUser.getKey() != otherUser.getKey()) {
+				if (!currentUser.getKey().equals(otherUser.getKey())) {
 					int count = 0;
 					if (currentUser.getValue().size() < otherUser.getValue().size()) {
 						for (String articleId : currentUser.getValue()) {
@@ -208,27 +210,44 @@ public class MainServiceImpl implements MainService {
 							}
 						}
 					}
-					if (userUser.containsKey(currentUser.getKey())) {
-						userUser.get(currentUser.getKey()).put(otherUser.getKey(), count * count
-								/ (double) currentUser.getValue().size() / otherUser.getValue().size());
-					} else {
-						Map<Long, Double> userSim = new HashMap<>();
-						userSim.put(otherUser.getKey(), count * count
-								/ (double) currentUser.getValue().size() / otherUser.getValue().size());
-						userUser.put(currentUser.getKey(), userSim);
-					}
+					userSim.put(otherUser.getKey(), count * count
+							/ (double) currentUser.getValue().size() / otherUser.getValue().size());
 				}
 			}
+			userSim = userSim.entrySet().stream()
+					.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+					.limit(Constants.K)
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+							(k, v) -> k, LinkedHashMap::new));
+			userUser.put(currentUser.getKey(), userSim);
 		}
 
-		Map<Long, Double> neighbours = userUser.get(user.getUserId()).entrySet().stream()
+		Map<Long, Double> neighbours = userUser.get(user.getUserId());
+
+		double sum = neighbours.values().stream().mapToDouble(Double::doubleValue).sum();
+
+		List<Article> articles = articleDao.getAllArticlesUserNotRate(user.getUserId());
+
+		Map<Article, Double> ratings = new HashMap<>();
+		for (Article article : articles) {
+			double k = 0;
+			for (Map.Entry<Long, Double> entry : neighbours.entrySet()) {
+				if (userArticles.get(entry.getKey()).contains(article.getArticleId())) {
+					k += entry.getValue();
+				}
+			}
+			ratings.put(article, k / sum);
+		}
+
+		List<Article> recommendations = new LinkedList<>(ratings.entrySet().stream()
 				.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-				.limit(Constants.K)
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k, v) -> k, LinkedHashMap::new));
+				.limit(Constants.N)
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+						(k, v) -> k, LinkedHashMap::new)).keySet());
 
-
-
-		return null;
+		return CollaborativeRecommendationsDto.builder()
+				.recommendations(recommendations)
+				.build();
 	}
 
 	public void setKeywordDao(KeywordDao keywordDao) {

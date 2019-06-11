@@ -19,13 +19,8 @@ public class ContentParser {
 		mainService.setKeywordDao(new KeywordDaoImpl());
 		mainService.setSimilarityDao(new SimilarityDaoImpl());
 
-		int count = 0;
 		for (Article article : articles) {
 			mainService.addKeywords(article);
-			count++;
-			if (count % 100 == 0) {
-				System.out.println("############################################################## " + count);
-			}
 		}
 	}
 }

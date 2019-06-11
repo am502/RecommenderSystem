@@ -20,11 +20,13 @@ public class ArticleDaoImpl implements ArticleDao {
 	private static final String GET_ARTICLE_BY_ID = "SELECT * FROM articles WHERE title = :title;";
 	private static final String GET_SIMILAR_ARTICLES = "SELECT a.* FROM articles a INNER JOIN (" +
 			"(SELECT first_article_id AS first, second_article_id AS second, similarity " +
-			"FROM similarities WHERE first_article_id = :articleId ORDER BY (similarity) LIMIT :limit) UNION ALL " +
+			"FROM similarities WHERE first_article_id = :articleId) UNION ALL " +
 			"(SELECT second_article_id AS first, first_article_id AS second, similarity " +
-			"FROM similarities WHERE second_article_id = :articleId ORDER BY (similarity) LIMIT :limit)) s " +
+			"FROM similarities WHERE second_article_id = :articleId)) s " +
 			"ON s.second = a.article_id ORDER BY (s.similarity) LIMIT :limit";
 	private static final String GET_ALL_ARTICLES = "SELECT * FROM articles;";
+	private static final String GET_ALL_ARTICLES_USER_NOT_RATE = "SELECT a.* FROM articles a WHERE a.article_id " +
+			"NOT IN (SELECT article_id FROM user_item WHERE user_id = :userId);";
 
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -56,5 +58,11 @@ public class ArticleDaoImpl implements ArticleDao {
 	@Override
 	public List<Article> getAllArticles() {
 		return namedParameterJdbcTemplate.query(GET_ALL_ARTICLES, new BeanPropertyRowMapper<>(Article.class));
+	}
+
+	@Override
+	public List<Article> getAllArticlesUserNotRate(long userId) {
+		return namedParameterJdbcTemplate.query(GET_ALL_ARTICLES_USER_NOT_RATE, new MapSqlParameterSource()
+				.addValue("userId", userId), new BeanPropertyRowMapper<>(Article.class));
 	}
 }
