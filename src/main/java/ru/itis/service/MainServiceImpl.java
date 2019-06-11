@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itis.dao.interfaces.*;
+import ru.itis.dto.CollaborativeRecommendationsDto;
 import ru.itis.dto.ContentRecommendationsDto;
 import ru.itis.model.*;
 import ru.itis.util.Constants;
@@ -131,9 +132,9 @@ public class MainServiceImpl implements MainService {
 					multiplication.put(keyword.getArticleId(),
 							multiplication.getOrDefault(keyword.getArticleId(), 0.0)
 									+ popularWords.get(keyword.getWord()) * keyword.getTf());
-					articleLengths.put(keyword.getArticleId(), articleLengths.getOrDefault(
-							keyword.getArticleId(), 0.0) + keyword.getTf() * keyword.getTf());
 				}
+				articleLengths.put(keyword.getArticleId(), articleLengths.getOrDefault(
+						keyword.getArticleId(), 0.0) + keyword.getTf() * keyword.getTf());
 			}
 		}
 
@@ -169,6 +170,65 @@ public class MainServiceImpl implements MainService {
 				.article(article)
 				.recommendations(recommendations)
 				.build();
+	}
+
+	@Override
+	public CollaborativeRecommendationsDto getPersonalRecommendations(String username) {
+		User user = userDao.getUserByUsername(username);
+		List<UserItem> userItems = userItemDao.getPopularUserItems();
+
+		Map<Long, Set<String>> userArticles = new HashMap<>();
+		for (UserItem userItem : userItems) {
+			long userId = userItem.getUserId();
+			String articleId = userItem.getArticleId();
+			if (userArticles.containsKey(userId)) {
+				userArticles.get(userId).add(articleId);
+			} else {
+				userArticles.put(userId, new HashSet<String>() {{
+					add(articleId);
+				}});
+			}
+		}
+
+		Map<Long, Map<Long, Double>> userUser = new HashMap<>();
+		for (Map.Entry<Long, Set<String>> currentUser : userArticles.entrySet()) {
+			for (Map.Entry<Long, Set<String>> otherUser : userArticles.entrySet()) {
+				if (currentUser.getKey() != otherUser.getKey()) {
+					int count = 0;
+					if (currentUser.getValue().size() < otherUser.getValue().size()) {
+						for (String articleId : currentUser.getValue()) {
+							if (otherUser.getValue().contains(articleId)) {
+								count++;
+							}
+						}
+					} else {
+						for (String articleId : otherUser.getValue()) {
+							if (currentUser.getValue().contains(articleId)) {
+								count++;
+							}
+						}
+					}
+					if (userUser.containsKey(currentUser.getKey())) {
+						userUser.get(currentUser.getKey()).put(otherUser.getKey(), count * count
+								/ (double) currentUser.getValue().size() / otherUser.getValue().size());
+					} else {
+						Map<Long, Double> userSim = new HashMap<>();
+						userSim.put(otherUser.getKey(), count * count
+								/ (double) currentUser.getValue().size() / otherUser.getValue().size());
+						userUser.put(currentUser.getKey(), userSim);
+					}
+				}
+			}
+		}
+
+		Map<Long, Double> neighbours = userUser.get(user.getUserId()).entrySet().stream()
+				.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+				.limit(Constants.K)
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (k, v) -> k, LinkedHashMap::new));
+
+
+
+		return null;
 	}
 
 	public void setKeywordDao(KeywordDao keywordDao) {

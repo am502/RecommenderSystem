@@ -8,4 +8,6 @@ public interface UserDao {
     void addUsers(List<User> users);
 
     long getMaxId();
+
+    User getUserByUsername(String username);
 }

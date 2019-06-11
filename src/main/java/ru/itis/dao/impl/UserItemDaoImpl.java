@@ -1,11 +1,14 @@
 package ru.itis.dao.impl;
 
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.itis.dao.config.DaoConfig;
 import ru.itis.dao.interfaces.UserItemDao;
 import ru.itis.model.UserItem;
+import ru.itis.util.Constants;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -15,6 +18,9 @@ import java.util.List;
 public class UserItemDaoImpl implements UserItemDao {
 	private static final String INSERT_USER_ITEM = "INSERT INTO user_item (user_id, article_id) " +
 			"VALUES (?, ?) ON CONFLICT (article_id) DO NOTHING;";
+	private static final String GET_POPULAR_USER_ITEMS = "SELECT ui.* FROM user_item ui " +
+			"INNER JOIN (SELECT user_id FROM user_item WHERE COUNT(article_id) >= :cv " +
+			"GROUP BY (user_id)) pu ON ui.user_id = pu.user_id;";
 
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -37,5 +43,11 @@ public class UserItemDaoImpl implements UserItemDao {
 						return userItems.size();
 					}
 				});
+	}
+
+	@Override
+	public List<UserItem> getPopularUserItems() {
+		return namedParameterJdbcTemplate.query(GET_POPULAR_USER_ITEMS, new MapSqlParameterSource()
+				.addValue("cv", Constants.CV), new BeanPropertyRowMapper<>(UserItem.class));
 	}
 }

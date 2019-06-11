@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface UserItemDao {
 	void addUserItems(List<UserItem> userItems);
+
+	List<UserItem> getPopularUserItems();
 }
