@@ -21,7 +21,7 @@ public class MainView extends VerticalLayout {
 		articleButton.addClickListener(e ->
 				articleButton.getUI().ifPresent(ui -> ui.navigate("article")));
 
-		Button recommendationsButton = new Button("Персональные реокмендации");
+		Button recommendationsButton = new Button("Персональные рекомендации");
 		recommendationsButton.addClickListener(e ->
 				recommendationsButton.getUI().ifPresent(ui -> ui.navigate("personal")));
 

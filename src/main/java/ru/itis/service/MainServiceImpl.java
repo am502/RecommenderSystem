@@ -90,8 +90,10 @@ public class MainServiceImpl implements MainService {
 						.build();
 
 				if (!article.getContent().isEmpty()) {
+					long start = System.currentTimeMillis();
 					articleDao.addArticle(article);
 					addKeywords(article);
+					System.out.println("Добавление статьи: " + (System.currentTimeMillis() - start));
 				}
 			} catch (HttpStatusException ignored) {
 			} catch (IOException e) {
@@ -165,8 +167,10 @@ public class MainServiceImpl implements MainService {
 
 	@Override
 	public ContentRecommendationsDto getArticleByTitle(String title) {
+		long start = System.currentTimeMillis();
 		Article article = articleDao.getArticleByTitle(title);
 		List<Article> recommendations = articleDao.getSimilarArticles(article.getArticleId());
+		System.out.println("Поиск статьи и формирование рекомендаций: " + (System.currentTimeMillis() - start));
 		return ContentRecommendationsDto.builder()
 				.article(article)
 				.recommendations(recommendations)
@@ -191,6 +195,7 @@ public class MainServiceImpl implements MainService {
 			}
 		}
 
+		long start = System.currentTimeMillis();
 		Map<Long, Map<Long, Double>> userUser = new HashMap<>();
 		for (Map.Entry<Long, Set<String>> currentUser : userArticles.entrySet()) {
 			Map<Long, Double> userSim = new HashMap<>();
@@ -221,12 +226,14 @@ public class MainServiceImpl implements MainService {
 							(k, v) -> k, LinkedHashMap::new));
 			userUser.put(currentUser.getKey(), userSim);
 		}
+		System.out.println("Формирование матрицы user-user: " + (System.currentTimeMillis() - start));
 
 		Map<Long, Double> neighbours = userUser.get(user.getUserId());
 
-		double sum = neighbours.values().stream().mapToDouble(Double::doubleValue).sum();
-
 		List<Article> articles = articleDao.getAllArticlesUserNotRate(user.getUserId());
+
+		start = System.currentTimeMillis();
+		double sum = neighbours.values().stream().mapToDouble(Double::doubleValue).sum();
 
 		Map<Article, Double> ratings = new HashMap<>();
 		for (Article article : articles) {
@@ -244,6 +251,7 @@ public class MainServiceImpl implements MainService {
 				.limit(Constants.N)
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
 						(k, v) -> k, LinkedHashMap::new)).keySet());
+		System.out.println("Формирование персональных рекомендаций: " + (System.currentTimeMillis() - start));
 
 		return CollaborativeRecommendationsDto.builder()
 				.recommendations(recommendations)
