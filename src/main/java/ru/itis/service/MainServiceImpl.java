@@ -6,6 +6,7 @@ import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.itis.app.App;
 import ru.itis.dao.interfaces.*;
 import ru.itis.dto.CollaborativeRecommendationsDto;
 import ru.itis.dto.ContentRecommendationsDto;
@@ -180,66 +181,24 @@ public class MainServiceImpl implements MainService {
 	@Override
 	public CollaborativeRecommendationsDto getPersonalRecommendations(String username) {
 		User user = userDao.getUserByUsername(username);
-		List<UserItem> userItems = userItemDao.getPopularUserItems();
-
-		Map<Long, Set<String>> userArticles = new HashMap<>();
-		for (UserItem userItem : userItems) {
-			long userId = userItem.getUserId();
-			String articleId = userItem.getArticleId();
-			if (userArticles.containsKey(userId)) {
-				userArticles.get(userId).add(articleId);
-			} else {
-				userArticles.put(userId, new HashSet<String>() {{
-					add(articleId);
-				}});
-			}
-		}
 
 		long start = System.currentTimeMillis();
-		Map<Long, Map<Long, Double>> userUser = new HashMap<>();
-		for (Map.Entry<Long, Set<String>> currentUser : userArticles.entrySet()) {
-			Map<Long, Double> userSim = new HashMap<>();
-			for (Map.Entry<Long, Set<String>> otherUser : userArticles.entrySet()) {
-				if (!currentUser.getKey().equals(otherUser.getKey())) {
-					int count = 0;
-					if (currentUser.getValue().size() < otherUser.getValue().size()) {
-						for (String articleId : currentUser.getValue()) {
-							if (otherUser.getValue().contains(articleId)) {
-								count++;
-							}
-						}
-					} else {
-						for (String articleId : otherUser.getValue()) {
-							if (currentUser.getValue().contains(articleId)) {
-								count++;
-							}
-						}
-					}
-					userSim.put(otherUser.getKey(), count * count
-							/ (double) currentUser.getValue().size() / otherUser.getValue().size());
-				}
-			}
-			userSim = userSim.entrySet().stream()
-					.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-					.limit(Constants.K)
-					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-							(k, v) -> k, LinkedHashMap::new));
-			userUser.put(currentUser.getKey(), userSim);
-		}
-		System.out.println("Формирование матрицы user-user: " + (System.currentTimeMillis() - start));
-
-		Map<Long, Double> neighbours = userUser.get(user.getUserId());
 
 		List<Article> articles = articleDao.getAllArticlesUserNotRate(user.getUserId());
 
+		System.out.println(System.currentTimeMillis() - start);
+
 		start = System.currentTimeMillis();
+
+		Map<Long, Double> neighbours = App.getUserUserMatrix().get(user.getUserId());
+
 		double sum = neighbours.values().stream().mapToDouble(Double::doubleValue).sum();
 
 		Map<Article, Double> ratings = new HashMap<>();
 		for (Article article : articles) {
 			double k = 0;
 			for (Map.Entry<Long, Double> entry : neighbours.entrySet()) {
-				if (userArticles.get(entry.getKey()).contains(article.getArticleId())) {
+				if (App.getUserArticles().get(entry.getKey()).contains(article.getArticleId())) {
 					k += entry.getValue();
 				}
 			}
